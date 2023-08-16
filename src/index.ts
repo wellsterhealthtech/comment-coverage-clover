@@ -186,6 +186,24 @@ function* checkThreshold(c: Stats, o?: Stats) {
 const notFoundMessage =
   "was not found, please check if the path is valid, or if it exists.";
 
+const getPullRequestForBranch = async (branchName) => {
+  if (!github) return null;
+  try {
+    const { data: pullRequests } = await github.rest.pulls.list({
+      ...context.repo,
+      state: "open",
+      head: `${context.repo.owner}:${branchName}`,
+    });
+    // Sort by PR number (desc) and get the highest one, which is the latest.
+    pullRequests.sort((a, b) => b.number - a.number);
+    console.debug("Found PR for branch:", pullRequests[0]);
+    return pullRequests[0];
+  } catch (error) {
+    console.error("Error fetching PRs for branch:", error);
+    return null;
+  }
+};
+
 const run = async () => {
   if (!["lines", "methods", "branches"].includes(tableWithTypeLimit)) {
     error(`there is no coverage type ${tableWithTypeLimit}`);
@@ -193,9 +211,24 @@ const run = async () => {
   }
 
   if (!github) return;
-  if (!context.payload.pull_request) return;
 
-  const commit = context.payload.pull_request?.head.sha.substring(0, 7);
+  let pr;
+  let issueNumber;
+  if (context.eventName === "push") {
+    pr = await getPullRequestForBranch(context.ref.replace("refs/heads/", ""));
+    if (!pr) {
+      console.log("No open pull request found for this branch. Exiting...");
+      return;
+    }
+  } else if (context.payload.pull_request) {
+    pr = context.payload.pull_request;
+  } else {
+    console.log("Neither 'push' nor 'pull_request' event. Skipping..");
+    return;
+  }
+  issueNumber = pr.number;
+
+  const commit = pr?.head.sha.substring(0, 7);
 
   if (!existsSync(file)) {
     throw `file "${file}" ${notFoundMessage}`;
@@ -239,7 +272,7 @@ ${signature}`;
     const comments = (
       await github.rest.issues.listComments({
         ...context.repo,
-        issue_number: context.issue.number,
+        issue_number: issueNumber,
       })
     ).data.filter(filter);
 
@@ -265,7 +298,7 @@ ${signature}`;
 
   await github.rest.issues.createComment({
     ...context.repo,
-    issue_number: context.issue.number,
+    issue_number: issueNumber,
     body,
   });
 };
