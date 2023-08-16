@@ -89767,11 +89767,11 @@ var getPullRequestForBranch = function (branchName) { return __awaiter$1(void 0,
                 pullRequests = (_a.sent()).data;
                 // Sort by PR number (desc) and get the highest one, which is the latest.
                 pullRequests.sort(function (a, b) { return b.number - a.number; });
-                console.debug("Found PR for branch:", pullRequests[0]);
+                coreExports.debug("Found PR for branch:".concat(pullRequests[0]));
                 return [2 /*return*/, pullRequests[0]];
             case 3:
                 error_1 = _a.sent();
-                console.error("Error fetching PRs for branch:", error_1);
+                error_1("Error fetching PRs for branch: ".concat(error_1));
                 return [2 /*return*/, null];
             case 4: return [2 /*return*/];
         }
@@ -89794,7 +89794,7 @@ var run = function () { return __awaiter$1(void 0, void 0, void 0, function () {
             case 1:
                 pr = _h.sent();
                 if (!pr) {
-                    console.log("No open pull request found for this branch. Exiting...");
+                    coreExports.debug("No open pull request found for this branch. Exiting...");
                     return [2 /*return*/];
                 }
                 return [3 /*break*/, 3];
@@ -89803,7 +89803,7 @@ var run = function () { return __awaiter$1(void 0, void 0, void 0, function () {
                     pr = utils$2.context.payload.pull_request;
                 }
                 else {
-                    console.log("Neither 'push' nor 'pull_request' event. Skipping..");
+                    coreExports.debug("Neither 'push' nor 'pull_request' event. Skipping..");
                     return [2 /*return*/];
                 }
                 _h.label = 3;

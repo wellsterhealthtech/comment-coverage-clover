@@ -196,10 +196,10 @@ const getPullRequestForBranch = async (branchName) => {
     });
     // Sort by PR number (desc) and get the highest one, which is the latest.
     pullRequests.sort((a, b) => b.number - a.number);
-    console.debug("Found PR for branch:", pullRequests[0]);
+    debug(`Found PR for branch:${pullRequests[0]}`);
     return pullRequests[0];
   } catch (error) {
-    console.error("Error fetching PRs for branch:", error);
+    error(`Error fetching PRs for branch: ${error}`);
     return null;
   }
 };
@@ -217,13 +217,13 @@ const run = async () => {
   if (context.eventName === "push") {
     pr = await getPullRequestForBranch(context.ref.replace("refs/heads/", ""));
     if (!pr) {
-      console.log("No open pull request found for this branch. Exiting...");
+      debug("No open pull request found for this branch. Exiting...");
       return;
     }
   } else if (context.payload.pull_request) {
     pr = context.payload.pull_request;
   } else {
-    console.log("Neither 'push' nor 'pull_request' event. Skipping..");
+    debug("Neither 'push' nor 'pull_request' event. Skipping..");
     return;
   }
   issueNumber = pr.number;
